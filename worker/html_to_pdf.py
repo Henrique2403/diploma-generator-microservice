@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import pdfkit
 import uuid
+import os
 
 # Gerar um GUID aleatório
 guid = uuid.uuid4()
@@ -123,9 +124,15 @@ html_content = f"""
 </body>
 </html>
 """
+#Obter diretorio do projeto
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
-config = pdfkit.configuration(wkhtmltopdf='C:\\Users\\labsfiap\\Desktop\\git\\gs_microsservicos\\worker\\wkhtmltopdf.exe')
+#Caminho para salvar o pdf gerado
+pdf_file_path = os.path.join(base_dir, f'{guid}.pdf')
 
-pdf_file_path = f'worker\\storage\\{guid}.pdf'
+#Definir caminho do executavel wkhtmltopdf
+wkhtmltopdf_dir = os.path.join(base_dir, 'wkhtmltopdf.exe')
+config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_dir)
 
+#Convertendo o html para pdf
 pdfkit.from_string(html_content, pdf_file_path, configuration=config)

@@ -1,138 +1,57 @@
-from bs4 import BeautifulSoup
 import pdfkit
 import uuid
-import os
+from pathlib import Path
 
-# Gerar um GUID aleatório
-guid = uuid.uuid4()
+def load_html(caminho_arquivo: Path) -> str:
+    with open(caminho_arquivo, 'r', encoding='utf-8') as file:
+        return file.read()
 
-name = "Henrique Copatti Cruz"
-nacionality = "Mexicano"
-state = "Guerrero"
-bday = "24/04/2004"
-document = "54140979-7"
-conclusion_date = "23/10/2024"
-course = "Sistemas de Informação"
-workload = "70 horas"
-emission_date = "23/10/2024"
-signature = "copatthe"
-job_position = "Analista de Suporte Técnico Jr"
+def update_html(html_content: str, person_informations: dict[str,str]) -> None:
+    for chave, valor in person_informations.items():
+        marcador: str = f"%%{chave}%%"
+        html_content: str = html_content.replace(marcador, str(valor))
+    generate_pdf(html_content) 
 
-html_content = f"""
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diploma</title>
-    <style>
-        @media print {{
-            @page {{
-                size: A4 landscape;
-                margin: 0; /* Remove margem padrão */
-            }}
-            body {{
-                margin: 0;
-                padding: 0;
-            }}
-            /* Ocultar cabeçalho e rodapé padrão */
-            body::before, body::after {{
-                display: none;
-            }}
-        }}
+def generate_pdf(html_content: str) -> None:
+    guid: uuid = generate_guid()
 
-        body {{
-            font-family: 'Times New Roman', Times, serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }}
-        
-        .diploma-container {{
-            width: 90%; /* Ajuste de largura para caber na página A4 em modo paisagem */
-            max-width: 1000px; /* Garantir que não ultrapasse a largura máxima */
-            margin: 0 auto;
-            padding: 40px;
-            background-color: white;
-            box-shadow: none;
-        }}
+    #Caminho para salvar o pdf gerado
+    pdf_file_path: Path = Path(__file__).parents[1] / 'storage' / f'{guid}.pdf'
 
-        .header {{
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-        }}
+    #Definir caminho do executavel wkhtmltopdf
+    wkhtmltopdf_dir: str = str(Path(__file__).parent / 'wkhtmltopdf.exe')
+    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_dir)
 
-        .sub-header {{
-            text-align: center;
-            font-size: 20px;
-            margin: 10px 0;
-        }}
+    #Convertendo o html para pdf
+    pdfkit.from_string(html_content, pdf_file_path, configuration=config)
 
-        .content {{
-            margin: 40px 0;
-            font-size: 18px;
-            line-height: 1.5;
-        }}
+def generate_guid() -> uuid:
+    return uuid.uuid4()
 
-        .signatures {{
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }}
+def main() -> None:
+    # person_informations: dict[str, str] = queue_message()
 
-        .signature {{
-            text-align: center;
-        }}
+    #Mock do dicionário até entender como pegaremos a mensagem do RabbitMQ
+    person_informations: dict[str, str] = {
+        "name": "Henrique Copatti Cruz",
+        "nacionality": "Mexicano",
+        "state": "Guerrero",
+        "bday": "24/04/2004",
+        "document": "54140979-7",
+        "conclusion_date": "23/10/2024",
+        "course": "Sistemas de Informação",
+        "workload": "70 horas",
+        "emission_date": "23/10/2024",
+        "signature": "copatthe",
+        "job_position": "Analista de Suporte Técnico Jr"
+    }
 
-        .signature p {{
-            margin: 5px 0;
-        }}
+    #Obter diretorio do template html
+    template_dir: Path = Path(__file__).parent / 'template.html'
+    
+    html_content: str = load_html(template_dir) 
 
-        .date {{
-            text-align: center;
-            margin-top: 40px;
-            font-size: 18px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="diploma-container">
-        <div class="header">Universidade de Programação</div>
-        <div class="sub-header">Certificado de Conclusão</div>
-        <div class="content">
-            <p>
-                Certificamos que <strong>{name}</strong>, {nacionality}, natural do Estado de {state}, nascido em {bday}, RG {document}, concluiu em {conclusion_date} o curso de {course}, nível de especialização, com carga horária de {workload} horas.
-            </p>
-            <p>
-                Este certificado é concedido em conformidade com o artigo 44, inciso 3353, da Lei 9394/96, e com a Resolução 
-                C.N.C./C.C.S. nº 01/07.
-            </p>
-        </div>
-        <div class="date">São Paulo, {emission_date}</div>
-        <div class="signatures">
-            <div class="signature">
-                <p><strong>{signature}</strong></p>
-                <p>{job_position}</p>
-            </div>            
-        </div>
-    </div>
-</body>
-</html>
-"""
-#Obter diretorio do projeto
-base_dir = os.path.dirname(os.path.abspath(__file__))
+    update_html(html_content, person_informations)
 
-#Caminho para salvar o pdf gerado
-pdf_file_path = os.path.join(base_dir, f'{guid}.pdf')
-
-#Definir caminho do executavel wkhtmltopdf
-wkhtmltopdf_dir = os.path.join(base_dir, 'wkhtmltopdf.exe')
-config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_dir)
-
-#Convertendo o html para pdf
-pdfkit.from_string(html_content, pdf_file_path, configuration=config)
+if __name__ == "__main__":
+    main()

@@ -2,8 +2,8 @@ import pdfkit
 import uuid
 from pathlib import Path
 
-def load_html(caminho_arquivo: Path) -> str:
-    with open(caminho_arquivo, 'r', encoding='utf-8') as file:
+def load_html(file_path: Path) -> str:
+    with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
 
 def update_html(html_content: str, person_informations: dict[str,str]) -> None:

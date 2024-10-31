@@ -21,7 +21,7 @@ async function sendToQueue(message) {
     try {
       const connection = await amqp.connect('amqp://rabbitmq');
       const channel = await connection.createChannel();
-      const queue = 'diplomasQueue';
+      const queue = 'degreesQueue';
   
       await channel.assertQueue(queue, { durable: true });
       channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true });
@@ -30,38 +30,67 @@ async function sendToQueue(message) {
     } catch (error) {
       console.error("Erro ao enviar mensagem para fila:", error);
     }
-  }
+}
 
 // Middleware para analisar JSON
 app.use(express.json());
 
 // Endpoint POST
-app.post('/certificate', (req, res) => {
+app.post('/degree', (req, res) => {
     const {
-        name,
+        student_name,
         nacionality,
         state,
-        bday,
+        birthday,
         document,
         conclusion_date,
         course,
         workload,
         emission_date,
-        signature,
-        job_position
+        template_diploma,
+        signatures
     } = req.body; 
 
+  // Salvando os dados no MySQL
+  const query = `INSERT INTO degrees (student_name, nacionality, state, birthday, document, 
+    conclusion_date, course, workload, emission_date, template_diploma) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
+  connection.query(query, [
+    student_name,
+    nacionality,
+    state,
+    birthday,
+    document,
+    conclusion_date,
+    course,
+    workload,
+    emission_date,
+    template_diploma,
+    signatures
+  ], (err, result) => {
+    if (err) {
+      console.error("Erro ao salvar no MySQL:", err);
+      return res.status(500).send('Erro ao salvar no banco de dados.');
+    }
 
-    // Responda com uma mensagem de sucesso
-    res.status(201).json({
-        message: 'Dados recebidos com sucesso!',
-        receivedData: data,
+    // Adicionar assinaturas
+    signatures.forEach(({ name, job_position }) => {
+      const querySignature = `INSERT INTO signatures (degree_id, name, job_position) VALUES (?, ?, ?)`;
+      
+      connection.query(querySignature, [result.insertId, name, job_position], (err) => {
+        if (err) console.error("Erro ao salvar assinatura:", err);
+      });
+    });
+
+    // Enviar os dados para a fila RabbitMQ
+    // sendToQueue(req.body);
+
+    res.status(200).send('Dados recebidos e processados com sucesso.');
     });
 });
 
 // Endpoint GET
-app.get('/certificate/:name/:course', (req, res) => {
+app.get('/degree/:name/:course', (req, res) => {
     const name = req.params.name;
 
     const course = req.params.course;
@@ -69,6 +98,6 @@ app.get('/certificate/:name/:course', (req, res) => {
 
 // Inicia o servidor
 const PORT = process.env.PORT || 3000;
-app.listen(port, () => {
+app.listen(PORT, () => {
     console.log(`API rodando em http://localhost:${PORT}`);
 });

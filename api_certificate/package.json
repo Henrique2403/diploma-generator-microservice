@@ -10,6 +10,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "express": "^4.21.1"
+    "amqplib": "^0.10.4",
+    "express": "^4.21.1",
+    "mysql2": "^3.11.3"
   }
 }

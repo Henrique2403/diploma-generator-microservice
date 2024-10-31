@@ -20,11 +20,15 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq  # Volume para persistir as mensagens
 
   mysql:
-    build:
-      context: ./db-mysql
-      dockerfile: ./Dockerfile
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: degrees_system
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
     volumes:
       - mysqldata:/var/lib/mysql
+      - ./db-mysql/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
     ports:
       - "3306:3306"
 
@@ -33,6 +37,7 @@ services:
       context: ./worker
       dockerfile: ./Dockerfile
     depends_on:
+      - mysql
       - rabbitmq
       - redis
 

@@ -13,14 +13,6 @@ Nessa versão de dev tem o arquivo worker\old_version_html_to_pdf.py que contém
    "workload":"240 horas",
    "emission_date":"2023-08-01",
    "template_diploma":"Modelo de Diploma de Conclusão",
-   "signatures":[
-      {
-         "name":"Maria Oliveira",
-         "job_position":"Coordenadora de Cursos"
-      },
-      {
-         "name":"Henrique bão",
-         "job_position":"ADM"
-      }
-   ]
+   "name":"Maria Oliveira",
+   "job_position":"Coordenadora de Cursos"
 }

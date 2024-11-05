@@ -13,13 +13,7 @@ CREATE TABLE degrees (
     `course`           VARCHAR(50),
     `workload`         VARCHAR(10),
     `emission_date`    DATE,
-    `template_diploma` TEXT
-);
-
-CREATE TABLE signatures (
-    `id`               INT AUTO_INCREMENT PRIMARY KEY,
-    `degree_id`        INT,
+    `template_degree` TEXT,
     `name`             VARCHAR(50),
     `job_position`     VARCHAR(50),
-    FOREIGN KEY (degree_id) REFERENCES degrees(id)
 );

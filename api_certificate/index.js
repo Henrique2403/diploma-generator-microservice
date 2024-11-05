@@ -48,13 +48,14 @@ app.post('/degree', (req, res) => {
         course,
         workload,
         emission_date,
-        template_diploma,
-        signatures
+        template_degree,
+        name,
+        job_position
     } = req.body; 
 
   // Salvando os dados no MySQL
   const query = `INSERT INTO degrees (student_name, nacionality, state, birthday, document, 
-    conclusion_date, course, workload, emission_date, template_diploma) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    conclusion_date, course, workload, emission_date, template_degree, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   connection.query(query, [
     student_name,
@@ -66,23 +67,14 @@ app.post('/degree', (req, res) => {
     course,
     workload,
     emission_date,
-    template_diploma,
-    signatures
+    template_degree,
+    name,
+    job_position
   ], (err, result) => {
     if (err) {
       console.error("Erro ao salvar no MySQL:", err);
       return res.status(500).send('Erro ao salvar no banco de dados.');
     }
-
-    // Adicionar assinaturas
-    signatures.forEach(({ name, job_position }) => {
-      const querySignature = `INSERT INTO signatures (degree_id, name, job_position) VALUES (?, ?, ?)`;
-      
-      connection.query(querySignature, [result.insertId, name, job_position], (err) => {
-        if (err) console.error("Erro ao salvar assinatura:", err);
-      });
-    });
-
     // Enviar os dados para a fila RabbitMQ
     sendToQueue(req.body);
 

@@ -1,15 +1,15 @@
 services:
-  redis:
-    image: redis
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./diplomas:/data
+  # redis:
+  #   image: redis
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   command: server /data
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - ./diplomas:/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -39,7 +39,6 @@ services:
     depends_on:
       - mysql
       - rabbitmq
-      - redis
 
   api_certificate:
     build:

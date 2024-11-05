@@ -93,11 +93,12 @@ app.post('/degree', (req, res) => {
 // Endpoint GET
 app.get('/degree/:document/:course', (req, res) => {
 
-    const values = [req.params.document, req.params.course]
+    const document = decodeURIComponent(req.params.document);
+    const course = decodeURIComponent(req.params.course);
 
     const query = "SELECT template_diploma FROM degrees WHERE document = ? AND course = ?"
 
-    connection.query(query, values, (err, results) => {
+    connection.query(query, [document, course], (err, results) => {
       if (err) {
           console.error("Erro ao buscar o diploma:", err);
           res.status(500).send("Erro no servidor");

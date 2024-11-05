@@ -19,7 +19,8 @@ connection.connect((err) => {
 // Conexão RabbitMQ
 async function sendToQueue(message) {
     try {
-      const connection = await amqp.connect('amqp://rabbitmq');
+      const RABBITMQ_HOST = process.env.RABBITMQ_HOST || "rabbitmq";
+      const connection = await amqp.connect(`amqp://${RABBITMQ_HOST}`);
       const channel = await connection.createChannel();
       const queue = 'degreesQueue';
   
@@ -83,17 +84,32 @@ app.post('/degree', (req, res) => {
     });
 
     // Enviar os dados para a fila RabbitMQ
-    // sendToQueue(req.body);
+    sendToQueue(req.body);
 
     res.status(200).send('Dados recebidos e processados com sucesso.');
     });
 });
 
 // Endpoint GET
-app.get('/degree/:name/:course', (req, res) => {
-    const name = req.params.name;
+app.get('/degree/:document/:course', (req, res) => {
 
-    const course = req.params.course;
+    const values = [req.params.document, req.params.course]
+
+    const query = "SELECT template_diploma FROM degrees WHERE document = ? AND course = ?"
+
+    connection.query(query, values, (err, results) => {
+      if (err) {
+          console.error("Erro ao buscar o diploma:", err);
+          res.status(500).send("Erro no servidor");
+          return;
+      }
+
+      if (results.length > 0) {
+          res.send(results[0].template_diploma);
+      } else {
+          res.status(404).send("Diploma não encontrado");
+      }
+  });
 });
 
 // Inicia o servidor

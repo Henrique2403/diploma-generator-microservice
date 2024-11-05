@@ -4,7 +4,7 @@ USE degrees_system;
 CREATE TABLE degrees (
     `id`               INT AUTO_INCREMENT PRIMARY KEY,
     `guid`             VARCHAR(36),
-    `student_name`             VARCHAR(50),
+    `student_name`     VARCHAR(50),
     `nacionality`      VARCHAR(20),
     `state`            VARCHAR(20),
     `birthday`         VARCHAR(10),

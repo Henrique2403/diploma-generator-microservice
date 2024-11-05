@@ -41,7 +41,7 @@ services:
       - rabbitmq
       - redis
 
-  diploma-node:
+  api_certificate:
     build:
       context: ./api_certificate
       dockerfile: Dockerfile
@@ -51,6 +51,7 @@ services:
       - DB_PASSWORD=userpassword
       - DB_DATABASE=degrees_system
       - RABBITMQ_HOST=rabbitmq
+      - PORT=3000
     depends_on:
       - mysql
       - rabbitmq

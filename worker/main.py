@@ -3,7 +3,7 @@ from queue_handle import process_message
 
 def main() -> None:
     # Configura a conexão com o RabbitMQ
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
     
     # Declaração da fila que será consumida

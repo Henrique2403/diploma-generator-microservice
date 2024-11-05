@@ -5,7 +5,9 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copiar o arquivo main.py para o contêiner
-COPY main.py .
+COPY . .
+
+RUN pip install -r requirements.txt
 
 # Comando para rodar a aplicação
 CMD ["python", "main.py"]

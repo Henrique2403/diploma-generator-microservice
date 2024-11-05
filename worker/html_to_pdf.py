@@ -1,6 +1,7 @@
 import pdfkit
 import uuid
 from pathlib import Path
+from person_information import PersonInformation
 
 def load_html(file_path: Path) -> str:
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -31,18 +32,19 @@ def generate_guid() -> uuid:
 def main() -> None:
     # person_informations: dict[str, str] = queue_message()
 
+    person_information: PersonInformation = PersonInformation()
     #Mock do dicionário até entender como pegaremos a mensagem do RabbitMQ
     person_informations: dict[str, str] = {
-        "name": "Henrique Copatti Cruz",
+        "student_name": "Henrique Copatti Cruz",
         "nacionality": "Mexicano",
         "state": "Guerrero",
-        "bday": "24/04/2004",
+        "birthday": "24/04/2004",
         "document": "54140979-7",
         "conclusion_date": "23/10/2024",
         "course": "Sistemas de Informação",
         "workload": "70 horas",
         "emission_date": "23/10/2024",
-        "signature": "copatthe",
+        "name": "copatthe",
         "job_position": "Analista de Suporte Técnico Jr"
     }
 

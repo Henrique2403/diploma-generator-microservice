@@ -1,15 +1,15 @@
 services:
-  redis:
-    image: redis
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./diplomas:/data
+  # redis:
+  #   image: redis
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   command: server /data
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - ./diplomas:/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -39,9 +39,8 @@ services:
     depends_on:
       - mysql
       - rabbitmq
-      - redis
 
-  diploma-node:
+  api_certificate:
     build:
       context: ./api_certificate
       dockerfile: Dockerfile
@@ -51,6 +50,7 @@ services:
       - DB_PASSWORD=userpassword
       - DB_DATABASE=degrees_system
       - RABBITMQ_HOST=rabbitmq
+      - PORT=3000
     depends_on:
       - mysql
       - rabbitmq

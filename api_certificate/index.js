@@ -36,7 +36,22 @@ async function sendToQueue(message) {
 // Middleware para analisar JSON
 app.use(express.json());
 
-// Endpoint POST
+// Ex: http://localhost:3000/degree
+// body - raw - JSON
+// {
+//    "student_name":"João Silva",
+//    "nacionality":"Brasileiro",
+//    "state":"São Paulo",
+//    "birthday":"1990-05-20",
+//    "document":"12345678901",
+//    "conclusion_date":"2023-07-15",
+//    "course":"Engenharia de Software",
+//    "workload":"240 horas",
+//    "emission_date":"2023-08-01",
+//    "template_diploma":"Modelo de Diploma de Conclusão",
+//    "name":"Maria Oliveira",
+//    "job_position":"Coordenadora de Cursos"
+// }
 app.post('/degree', (req, res) => {
     const {
         student_name,
@@ -75,6 +90,7 @@ app.post('/degree', (req, res) => {
       console.error("Erro ao salvar no MySQL:", err);
       return res.status(500).send('Erro ao salvar no banco de dados.');
     }
+    
     // Enviar os dados para a fila RabbitMQ
     sendToQueue(req.body);
 
@@ -82,7 +98,7 @@ app.post('/degree', (req, res) => {
     });
 });
 
-// Endpoint GET
+//Ex: http://localhost:3000/degree/111111111/Sistemas%20de%20Informação
 app.get('/degree/:document/:course', (req, res) => {
 
     const document = decodeURIComponent(req.params.document);
@@ -105,7 +121,6 @@ app.get('/degree/:document/:course', (req, res) => {
   });
 });
 
-// Inicia o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`API rodando em http://localhost:${PORT}`);

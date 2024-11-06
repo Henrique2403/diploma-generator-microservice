@@ -1,20 +1,20 @@
-# Use the official Node.js image from the Docker Hub
+# Use a imagem oficial do Node.js do Docker Hub
 FROM node:14
 
-# Create and change to the app directory
+# Definir o diretório de trabalho
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Copiar package.json and package-lock.json
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install mysql2 amqplib
+RUN npm install mysql2 amqplib redis
 
-# Copy the rest of the application code
+# Copia o resto do código
 COPY . .
 
-# Expose the port the app runs on
+# Expôe a porta 3000
 EXPOSE 3000
 
-# Define the command to run the app
+# Comando para rodar a aplicação
 CMD ["node", "index.js"]

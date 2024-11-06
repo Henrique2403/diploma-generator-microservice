@@ -32,9 +32,9 @@ services:
     ports:
       - "3306:3306"
 
-  worker:
+  application:
     build:
-      context: ./worker
+      context: ./application
       dockerfile: ./Dockerfile
     depends_on:
       - mysql

@@ -13,7 +13,7 @@ CREATE TABLE degrees (
     `course`           VARCHAR(50),
     `workload`         VARCHAR(10),
     `emission_date`    DATE,
-    `template_degree` TEXT,
+    `template_degree`  TEXT,
     `name`             VARCHAR(50),
-    `job_position`     VARCHAR(50),
+    `job_position`     VARCHAR(50)
 );

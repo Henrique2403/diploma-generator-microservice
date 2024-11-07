@@ -136,7 +136,7 @@ app.get('/degree/:id', (req, res) => {
 
       if (results.length > 0) {
           res.sendFile(
-            path.join('app', 'storage')
+            path.join('/app/storage', path.basename(results[0].url))
           );
       } else {
           res.status(404).send("Diploma não encontrado");

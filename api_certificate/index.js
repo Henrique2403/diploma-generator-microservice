@@ -5,9 +5,6 @@ const app = express();
 const { v4: uuidv4 } = require('uuid');
 const { format } = require('date-fns');
 
-const emission_date = new Date();
-console.log();
-
 
 // Conexão com o MySQL
 const connection = mysql.createConnection({
@@ -99,11 +96,28 @@ app.post('/degree', (req, res) => {
       return res.status(500).send('Erro ao salvar no banco de dados.');
     }
     
-    // Enviar os dados para a fila RabbitMQ
-    sendToQueue(req.body);
+    const message = {
+      guid,
+      student_name,
+      nacionality,
+      state,
+      birthday,
+      document,
+      conclusion_date,
+      course,
+      workload,
+      emission_date,
+      url,
+      name,
+      job_position
+    };
 
-    res.status(200).send('Dados recebidos e processados com sucesso.');
-    //retornar o guid
+    console.log(message);
+    // Enviar os dados para a fila RabbitMQ
+    sendToQueue(message);
+
+    res.status(200).send(`ID do certificado: ${result.insertId}`);
+
     });
 });
 

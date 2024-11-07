@@ -12,7 +12,7 @@ CREATE TABLE degrees (
     `conclusion_date`  VARCHAR(10),
     `course`           VARCHAR(50),
     `workload`         VARCHAR(10),
-    `emission_date`    DATE,
+    `emission_date`    VARCHAR(10),
     `url`              TEXT,
     `name`             VARCHAR(50),
     `job_position`     VARCHAR(50)

@@ -112,24 +112,21 @@ app.post('/degree', (req, res) => {
       job_position
     };
 
-    console.log(message);
     // Enviar os dados para a fila RabbitMQ
     sendToQueue(message);
 
     res.status(200).send(`ID do certificado: ${result.insertId}`);
-
     });
 });
 
-//Ex: http://localhost:3000/degree/111111111/Sistemas%20de%20Informação
-app.get('/degree/:document/:course', (req, res) => {
+//Ex: http://localhost:3000/degree/1
+app.get('/degree/:id', (req, res) => {
 
-    const document = decodeURIComponent(req.params.document);
-    const course = decodeURIComponent(req.params.course);
+    const id = req.params.id;
 
-    const query = "SELECT template_diploma FROM degrees WHERE document = ? AND course = ?"
+    const query = "SELECT url FROM degrees WHERE id = ?"
 
-    connection.query(query, [document, course], (err, results) => {
+    connection.query(query, id, (err, results) => {
       if (err) {
           console.error("Erro ao buscar o diploma:", err);
           res.status(500).send("Erro no servidor");
@@ -137,8 +134,7 @@ app.get('/degree/:document/:course', (req, res) => {
       }
 
       if (results.length > 0) {
-          res.send(results[0].template_diploma);
-          //retornar o pdf no volume storage
+          res.send(results[0].url);
       } else {
           res.status(404).send("Diploma não encontrado");
       }

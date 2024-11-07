@@ -2,6 +2,9 @@ const express = require('express');
 const mysql = require('mysql2');
 const amqp = require('amqplib');
 const app = express();
+const { v4: uuidv4 } = require('uuid');
+const { format } = require('date-fns');
+
 
 // Conexão com o MySQL
 const connection = mysql.createConnection({
@@ -36,27 +39,45 @@ async function sendToQueue(message) {
 // Middleware para analisar JSON
 app.use(express.json());
 
-// Endpoint POST
+// Ex: http://localhost:3000/degree
+// body - raw - JSON
+// {
+//    "student_name":"João Silva",
+//    "nacionality":"Brasileiro",
+//    "state":"São Paulo",
+//    "birthday":"1990-05-20",
+//    "document":"12345678901",
+//    "conclusion_date":"2023-07-15",
+//    "course":"Engenharia de Software",
+//    "workload":"240 horas",
+//    "name":"Maria Oliveira",
+//    "job_position":"Coordenadora de Cursos"
+// }
 app.post('/degree', (req, res) => {
-    const {
-        student_name,
-        nacionality,
-        state,
-        birthday,
-        document,
-        conclusion_date,
-        course,
-        workload,
-        emission_date,
-        template_diploma,
-        signatures
-    } = req.body; 
+  
+  const guid = uuidv4();  
+  const url = `./app/${guid}.pdf`;
+  const emission_date = format(new Date(), 'dd/MM/yyyy');
+
+  const {
+    student_name,
+    nacionality,
+    state,
+    birthday,
+    document,
+    conclusion_date,
+    course,
+    workload,
+    name,
+    job_position
+  } = req.body; 
 
   // Salvando os dados no MySQL
-  const query = `INSERT INTO degrees (student_name, nacionality, state, birthday, document, 
-    conclusion_date, course, workload, emission_date, template_diploma) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO degrees (guid, student_name, nacionality, state, birthday, document, 
+    conclusion_date, course, workload, emission_date, url, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   connection.query(query, [
+    guid,
     student_name,
     nacionality,
     state,
@@ -66,38 +87,46 @@ app.post('/degree', (req, res) => {
     course,
     workload,
     emission_date,
-    template_diploma,
-    signatures
+    url,
+    name,
+    job_position
   ], (err, result) => {
     if (err) {
       console.error("Erro ao salvar no MySQL:", err);
       return res.status(500).send('Erro ao salvar no banco de dados.');
     }
-
-    // Adicionar assinaturas
-    signatures.forEach(({ name, job_position }) => {
-      const querySignature = `INSERT INTO signatures (degree_id, name, job_position) VALUES (?, ?, ?)`;
-      
-      connection.query(querySignature, [result.insertId, name, job_position], (err) => {
-        if (err) console.error("Erro ao salvar assinatura:", err);
-      });
-    });
+    
+    const message = {
+      guid,
+      student_name,
+      nacionality,
+      state,
+      birthday,
+      document,
+      conclusion_date,
+      course,
+      workload,
+      emission_date,
+      url,
+      name,
+      job_position
+    };
 
     // Enviar os dados para a fila RabbitMQ
-    sendToQueue(req.body);
+    sendToQueue(message);
 
-    res.status(200).send('Dados recebidos e processados com sucesso.');
+    res.status(200).send(`ID do certificado: ${result.insertId}`);
     });
 });
 
-// Endpoint GET
-app.get('/degree/:document/:course', (req, res) => {
+//Ex: http://localhost:3000/degree/1
+app.get('/degree/:id', (req, res) => {
 
-    const values = [req.params.document, req.params.course]
+    const id = req.params.id;
 
-    const query = "SELECT template_diploma FROM degrees WHERE document = ? AND course = ?"
+    const query = "SELECT url FROM degrees WHERE id = ?"
 
-    connection.query(query, values, (err, results) => {
+    connection.query(query, id, (err, results) => {
       if (err) {
           console.error("Erro ao buscar o diploma:", err);
           res.status(500).send("Erro no servidor");
@@ -105,14 +134,13 @@ app.get('/degree/:document/:course', (req, res) => {
       }
 
       if (results.length > 0) {
-          res.send(results[0].template_diploma);
+          res.send(results[0].url);
       } else {
           res.status(404).send("Diploma não encontrado");
       }
   });
 });
 
-// Inicia o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`API rodando em http://localhost:${PORT}`);

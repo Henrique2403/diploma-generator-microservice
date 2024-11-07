@@ -17,7 +17,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  # Volume para persistir as mensagens
+      - rabbitmq_data:/var/lib/rabbitmq 
 
   mysql:
     image: mysql:5.7
@@ -32,10 +32,12 @@ services:
     ports:
       - "3306:3306"
 
-  worker:
+  application:
     build:
-      context: ./worker
+      context: ./application
       dockerfile: ./Dockerfile
+    volumes:
+      - ./application/storage:/app/storage
     depends_on:
       - mysql
       - rabbitmq
@@ -51,6 +53,8 @@ services:
       - DB_DATABASE=degrees_system
       - RABBITMQ_HOST=rabbitmq
       - PORT=3000
+    volumes:
+      - ./application/storage:/app/storage
     depends_on:
       - mysql
       - rabbitmq

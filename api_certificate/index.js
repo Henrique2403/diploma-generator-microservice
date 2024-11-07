@@ -4,6 +4,7 @@ const amqp = require('amqplib');
 const app = express();
 const { v4: uuidv4 } = require('uuid');
 const { format } = require('date-fns');
+const path = require('path');
 
 
 // Conexão com o MySQL
@@ -134,7 +135,9 @@ app.get('/degree/:id', (req, res) => {
       }
 
       if (results.length > 0) {
-          res.send(results[0].url);
+          res.sendFile(
+            path.join('app', 'storage')
+          );
       } else {
           res.status(404).send("Diploma não encontrado");
       }

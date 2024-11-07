@@ -36,6 +36,8 @@ services:
     build:
       context: ./application
       dockerfile: ./Dockerfile
+    volumes:
+      - ./application/storage:/app/storage
     depends_on:
       - mysql
       - rabbitmq
@@ -51,6 +53,8 @@ services:
       - DB_DATABASE=degrees_system
       - RABBITMQ_HOST=rabbitmq
       - PORT=3000
+    volumes:
+      - ./application/storage:/app/storage
     depends_on:
       - mysql
       - rabbitmq

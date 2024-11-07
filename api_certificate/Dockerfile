@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install mysql2 amqplib redis
+RUN npm install mysql2 amqplib redis uuid date-fns
 
 # Copia o resto do código
 COPY . .

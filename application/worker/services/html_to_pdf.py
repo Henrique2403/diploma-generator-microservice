@@ -1,6 +1,5 @@
 from xhtml2pdf import pisa
 from pathlib import Path
-from .mysql_service import update_database
 from ..models.person_information import PersonInformation
 
 def generate_pdf(person_information: PersonInformation) -> None:
@@ -11,8 +10,6 @@ def generate_pdf(person_information: PersonInformation) -> None:
 
     update_html(html_content, person_information)
 
-    update_database(person_information)
-
 def load_html(file_path: Path) -> str:
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
@@ -21,7 +18,6 @@ def update_html(html_content: str, person_information: PersonInformation) -> Non
     for chave, valor in person_information.__dict__.items():
         marcador: str = f"%%{chave}%%"
         html_content: str = html_content.replace(marcador, str(valor))
-    person_information.template_degree = html_content
 
     upload_pdf(html_content, person_information.guid) 
 

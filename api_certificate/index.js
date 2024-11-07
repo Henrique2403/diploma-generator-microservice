@@ -2,6 +2,12 @@ const express = require('express');
 const mysql = require('mysql2');
 const amqp = require('amqplib');
 const app = express();
+const { v4: uuidv4 } = require('uuid');
+const { format } = require('date-fns');
+
+const emission_date = new Date();
+console.log();
+
 
 // Conexão com o MySQL
 const connection = mysql.createConnection({
@@ -47,32 +53,34 @@ app.use(express.json());
 //    "conclusion_date":"2023-07-15",
 //    "course":"Engenharia de Software",
 //    "workload":"240 horas",
-//    "emission_date":"2023-08-01",
-//    "template_diploma":"Modelo de Diploma de Conclusão",
 //    "name":"Maria Oliveira",
 //    "job_position":"Coordenadora de Cursos"
 // }
 app.post('/degree', (req, res) => {
-    const {
-        student_name,
-        nacionality,
-        state,
-        birthday,
-        document,
-        conclusion_date,
-        course,
-        workload,
-        emission_date,
-        template_degree,
-        name,
-        job_position
-    } = req.body; 
+  
+  const guid = uuidv4();  
+  const url = `./app/${guid}.pdf`;
+  const emission_date = format(new Date(), 'dd/MM/yyyy');
+
+  const {
+    student_name,
+    nacionality,
+    state,
+    birthday,
+    document,
+    conclusion_date,
+    course,
+    workload,
+    name,
+    job_position
+  } = req.body; 
 
   // Salvando os dados no MySQL
-  const query = `INSERT INTO degrees (student_name, nacionality, state, birthday, document, 
-    conclusion_date, course, workload, emission_date, template_degree, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO degrees (guid, student_name, nacionality, state, birthday, document, 
+    conclusion_date, course, workload, emission_date, url, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   connection.query(query, [
+    guid,
     student_name,
     nacionality,
     state,
@@ -82,7 +90,7 @@ app.post('/degree', (req, res) => {
     course,
     workload,
     emission_date,
-    template_degree,
+    url,
     name,
     job_position
   ], (err, result) => {
@@ -95,6 +103,7 @@ app.post('/degree', (req, res) => {
     sendToQueue(req.body);
 
     res.status(200).send('Dados recebidos e processados com sucesso.');
+    //retornar o guid
     });
 });
 
@@ -115,6 +124,7 @@ app.get('/degree/:document/:course', (req, res) => {
 
       if (results.length > 0) {
           res.send(results[0].template_diploma);
+          //retornar o pdf no volume storage
       } else {
           res.status(404).send("Diploma não encontrado");
       }

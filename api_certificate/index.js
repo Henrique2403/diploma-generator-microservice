@@ -18,24 +18,37 @@ const swaggerOptions = {
       description: 'Aplicação para a geração de certificados em formato PDF, utilizando MySQL e RabbitMQ',
     },
   },
-  apis: [__filename], // O caminho do seu arquivo de código
+  apis: [__filename], 
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Conexão com o MySQL
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-});
+// Função para tentar conectar ao MySQL
+async function connectWithRetry() {
+  return new Promise((resolve) => {
+    const attemptConnection = () => {
+      const connection = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+      });
 
-connection.connect((err) => {
-  if (err) throw err;
-  console.log('Conectado ao MySQL!');
-});
+      connection.connect((err) => {
+        if (err) {
+          console.error('Erro ao conectar ao MySQL, tentando novamente em 5 segundos...', err);
+          setTimeout(attemptConnection, 5000); // Espera 5 segundos antes de tentar novamente
+        } else {
+          console.log('Conectado ao MySQL!');
+          resolve(connection); // Resolve a Promise apenas quando a conexão é bem-sucedida
+        }
+      });
+    };
+
+    attemptConnection();
+  });
+}
 
 // Conexão RabbitMQ
 async function sendToQueue(message) {
@@ -54,115 +67,78 @@ async function sendToQueue(message) {
   }
 }
 
-// Middleware para analisar JSON
-app.use(express.json());
+async function startApp() {
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Degree:
- *       type: object
- *       properties:
- *         student_name:
- *           type: string
- *           description: Nome do estudante
- *         nacionality:
- *           type: string
- *           description: Nacionalidade do estudante
- *         state:
- *           type: string
- *           description: Estado do estudante
- *         birthday:
- *           type: string
- *           format: date
- *           description: Data de nascimento do estudante
- *         document:
- *           type: string
- *           description: Documento do estudante
- *         conclusion_date:
- *           type: string
- *           format: date
- *           description: Data de conclusão do curso
- *         course:
- *           type: string
- *           description: Nome do curso
- *         workload:
- *           type: string
- *           description: Carga horária do curso
- *         name:
- *           type: string
- *           description: Nome do coordenador
- *         job_position:
- *           type: string
- *           description: Cargo do coordenador
- */
+  try {
+    const connection = await connectWithRetry(); 
+  
+    // Middleware para analisar JSON
+    app.use(express.json());
 
-/**
- * @swagger
- * /degree:
- *   post:
- *     summary: Cria um novo diploma
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Degree'
- *     responses:
- *       200:
- *         description: Diploma criado com sucesso
- *       500:
- *         description: Erro ao salvar no banco de dados
- */
-app.post('/degree', (req, res) => {
-  const guid = uuidv4();
-  const url = `/app/storage/${guid}.pdf`;
-  const emission_date = format(new Date(), 'dd/MM/yyyy');
+    /**
+     * @swagger
+     * components:
+     *   schemas:
+     *     Degree:
+     *       type: object
+     *       properties:
+     *         student_name:
+     *           type: string
+     *           description: Nome do estudante
+     *         nacionality:
+     *           type: string
+     *           description: Nacionalidade do estudante
+     *         state:
+     *           type: string
+     *           description: Estado do estudante
+     *         birthday:
+     *           type: string
+     *           format: date
+     *           description: Data de nascimento do estudante
+     *         document:
+     *           type: string
+     *           description: Documento do estudante
+     *         conclusion_date:
+     *           type: string
+     *           format: date
+     *           description: Data de conclusão do curso
+     *         course:
+     *           type: string
+     *           description: Nome do curso
+     *         workload:
+     *           type: string
+     *           description: Carga horária do curso
+     *         name:
+     *           type: string
+     *           description: Nome do coordenador
+     *         job_position:
+     *           type: string
+     *           description: Cargo do coordenador
+     */
 
-  let {
-    student_name,
-    nacionality,
-    state,
-    birthday,
-    document,
-    conclusion_date,
-    course,
-    workload,
-    name,
-    job_position,
-  } = req.body;
+    /**
+     * @swagger
+     * /degree:
+     *   post:
+     *     summary: Cria um novo diploma
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/Degree'
+     *     responses:
+     *       200:
+     *         description: Diploma criado com sucesso
+     *       500:
+     *         description: Erro ao salvar no banco de dados
+     */
+    app.post('/degree', (req, res) => {
+      const guid = uuidv4();
+      const url = `/app/storage/${guid}.pdf`;
+      const emission_date = format(new Date(), 'dd/MM/yyyy');
 
-  birthday = format(parseISO(birthday), 'dd/MM/yyyy');
-  conclusion_date = format(parseISO(conclusion_date), 'dd/MM/yyyy');
-
-  const query = `INSERT INTO degrees (guid, student_name, nacionality, state, birthday, document, conclusion_date, course, workload, emission_date, url, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  connection.query(
-    query,
-    [
-      guid,
-      student_name,
-      nacionality,
-      state,
-      birthday,
-      document,
-      conclusion_date,
-      course,
-      workload,
-      emission_date,
-      url,
-      name,
-      job_position,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error('Erro ao salvar no MySQL:', err);
-        return res.status(500).send('Erro ao salvar no banco de dados.');
-      }
-
-      const message = {
-        guid,
+      let {
         student_name,
         nacionality,
         state,
@@ -171,61 +147,109 @@ app.post('/degree', (req, res) => {
         conclusion_date,
         course,
         workload,
-        emission_date,
-        url,
         name,
         job_position,
-      };
+      } = req.body;
 
-      sendToQueue(message);
+      birthday = format(parseISO(birthday), 'dd/MM/yyyy');
+      conclusion_date = format(parseISO(conclusion_date), 'dd/MM/yyyy');
 
-      res.status(200).send(`ID do certificado: ${result.insertId}`);
-    }
-  );
-});
+      const query = `INSERT INTO degrees (guid, student_name, nacionality, state, birthday, document, conclusion_date, course, workload, emission_date, url, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-/**
- * @swagger
- * /degree/{id}:
- *   get:
- *     summary: Retorna o diploma pelo ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do diploma
- *     responses:
- *       200:
- *         description: Diploma retornado com sucesso
- *       404:
- *         description: Diploma não encontrado
- *       500:
- *         description: Erro no servidor
- */
-app.get('/degree/:id', (req, res) => {
-  const id = req.params.id;
+      connection.query(
+        query,
+        [
+          guid,
+          student_name,
+          nacionality,
+          state,
+          birthday,
+          document,
+          conclusion_date,
+          course,
+          workload,
+          emission_date,
+          url,
+          name,
+          job_position,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error('Erro ao salvar no MySQL:', err);
+            return res.status(500).send('Erro ao salvar no banco de dados.');
+          }
 
-  const query = 'SELECT url FROM degrees WHERE id = ?';
+          const message = {
+            guid,
+            student_name,
+            nacionality,
+            state,
+            birthday,
+            document,
+            conclusion_date,
+            course,
+            workload,
+            emission_date,
+            url,
+            name,
+            job_position,
+          };
 
-  connection.query(query, id, (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar o diploma:', err);
-      res.status(500).send('Erro no servidor');
-      return;
-    }
+          sendToQueue(message);
 
-    if (results.length > 0) {
-      res.sendFile(path.join(results[0].url));
-    } else {
-      res.status(404).send('Diploma não encontrado');
-    }
-  });
-});
+          res.status(200).send(`ID do certificado: ${result.insertId}`);
+        }
+      );
+    });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`API rodando em http://localhost:${PORT}`);
-  console.log(`Documentação Swagger disponível em http://localhost:${PORT}/swagger`);
-});
+    /**
+     * @swagger
+     * /degree/{id}:
+     *   get:
+     *     summary: Retorna o diploma pelo ID
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID do diploma
+     *     responses:
+     *       200:
+     *         description: Diploma retornado com sucesso
+     *       404:
+     *         description: Diploma não encontrado
+     *       500:
+     *         description: Erro no servidor
+     */
+    app.get('/degree/:id', (req, res) => {
+      const id = req.params.id;
+
+      const query = 'SELECT url FROM degrees WHERE id = ?';
+
+      connection.query(query, id, (err, results) => {
+        if (err) {
+          console.error('Erro ao buscar o diploma:', err);
+          res.status(500).send('Erro no servidor');
+          return;
+        }
+
+        if (results.length > 0) {
+          res.sendFile(path.join(results[0].url));
+        } else {
+          res.status(404).send('Diploma não encontrado');
+        }
+      });
+    });
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`API rodando em http://localhost:${PORT}`);
+      console.log(`Documentação Swagger disponível em http://localhost:${PORT}/swagger`);
+    });
+  }catch (error){
+    console.error('Não foi possível iniciar a aplicação:', error);
+  }
+}
+
+startApp()

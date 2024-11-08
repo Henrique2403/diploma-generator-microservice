@@ -4,6 +4,7 @@ const amqp = require('amqplib');
 const app = express();
 const { v4: uuidv4 } = require('uuid');
 const { format } = require('date-fns');
+const path = require('path');
 
 
 // Conexão com o MySQL
@@ -56,7 +57,7 @@ app.use(express.json());
 app.post('/degree', (req, res) => {
   
   const guid = uuidv4();  
-  const url = `./app/${guid}.pdf`;
+  const url = `/app/storage/${guid}.pdf`;
   const emission_date = format(new Date(), 'dd/MM/yyyy');
 
   const {
@@ -134,7 +135,9 @@ app.get('/degree/:id', (req, res) => {
       }
 
       if (results.length > 0) {
-          res.send(results[0].url);
+          res.sendFile(
+            path.join(results[0].url)
+          );
       } else {
           res.status(404).send("Diploma não encontrado");
       }

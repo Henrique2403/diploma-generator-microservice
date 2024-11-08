@@ -1,0 +1,66 @@
+services:
+  # redis:
+  #   image: redis
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   command: server /data
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - ./diplomas:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq 
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: degrees_system
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./db-mysql/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
+    ports:
+      - "3306:3306"
+
+  application:
+    build:
+      context: ./application
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./application/storage:/app/storage
+    depends_on:
+      - mysql
+      - rabbitmq
+
+  api_certificate:
+    build:
+      context: ./api_certificate
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=user
+      - DB_PASSWORD=userpassword
+      - DB_DATABASE=degrees_system
+      - RABBITMQ_HOST=rabbitmq
+      - PORT=3000
+    volumes:
+      - ./application/storage:/app/storage
+    depends_on:
+      - mysql
+      - rabbitmq
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysqldata:
+  rabbitmq_data:

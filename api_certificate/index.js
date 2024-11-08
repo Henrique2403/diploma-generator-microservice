@@ -57,7 +57,7 @@ app.use(express.json());
 app.post('/degree', (req, res) => {
   
   const guid = uuidv4();  
-  const url = `./app/${guid}.pdf`;
+  const url = `/app/storage/${guid}.pdf`;
   const emission_date = format(new Date(), 'dd/MM/yyyy');
 
   const {
@@ -136,7 +136,7 @@ app.get('/degree/:id', (req, res) => {
 
       if (results.length > 0) {
           res.sendFile(
-            path.join('/app/storage', path.basename(results[0].url))
+            path.join(results[0].url)
           );
       } else {
           res.status(404).send("Diploma não encontrado");

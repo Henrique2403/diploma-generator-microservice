@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install mysql2 amqplib redis date-fns uuid@8.x
+RUN npm install mysql2 amqplib redis date-fns uuid@8.x swagger-jsdoc swagger-ui-express
 
 # Copia o resto do código
 COPY . .

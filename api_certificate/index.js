@@ -151,8 +151,7 @@ async function startApp() {
         job_position,
       } = req.body;
 
-      birthday = format(parseISO(birthday), 'dd/MM/yyyy');
-      conclusion_date = format(parseISO(conclusion_date), 'dd/MM/yyyy');
+      birthday, conclusion_date = format(parseISO(birthday), 'dd/MM/yyyy');
 
       const query = `INSERT INTO degrees (guid, student_name, nacionality, state, birthday, document, conclusion_date, course, workload, emission_date, url, name, job_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 

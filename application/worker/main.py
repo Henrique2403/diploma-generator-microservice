@@ -13,9 +13,9 @@ def main() -> None:
     print("Aguardando mensagens...")
     
     # Função pra tentar reprocessar a mensagem
-    def callback(ch, method, properties, body) -> None:
+    async def callback(ch, method, properties, body) -> None:
         try:
-            process_message(json.loads(body))
+            await process_message(json.loads(body))
             ch.basic_ack(delivery_tag=method.delivery_tag)  
             print("Mensagem processada com sucesso!")
         except Exception as e:

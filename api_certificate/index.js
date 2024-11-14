@@ -7,6 +7,9 @@ const { format, parseISO } = require('date-fns');
 const path = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const redis = require('redis');
+const { stringify } = require('querystring');
+const { Socket } = require('dgram');
 
 // Configuração do Swagger
 const swaggerOptions = {
@@ -66,6 +69,22 @@ async function sendToQueue(message) {
     console.error('Erro ao enviar mensagem para fila:', error);
   }
 }
+
+// Conexão Redis
+const client = redis.createClient({
+  socket:{
+    host:process.env.REDIS_HOST || 'redis',
+    port:6379
+  }
+});
+
+client.on('error', (err) => {
+  console.error('Erro ao conectar ao Redis:', err);
+});
+
+client.connect().then(() => {
+  console.log('Conectado ao Redis!');
+})
 
 async function startApp() {
 
@@ -133,7 +152,7 @@ async function startApp() {
      *       500:
      *         description: Erro ao salvar no banco de dados
      */
-    app.post('/degree', (req, res) => {
+    app.post('/degree', async(req, res) => {
       const guid = uuidv4();
       const url = `/app/storage/${guid}.pdf`;
       const emission_date = format(new Date(), 'dd/MM/yyyy');
@@ -221,12 +240,20 @@ async function startApp() {
      *       500:
      *         description: Erro no servidor
      */
-    app.get('/degree/:id', (req, res) => {
+    app.get('/degree/:id', async(req, res) => {
       const id = req.params.id;
 
       const query = 'SELECT url FROM degrees WHERE id = ?';
 
-      connection.query(query, id, (err, results) => {
+      const degree = await client.get(id);
+
+      if (degree) {
+        const fileData = JSON.parse(degree);
+        console.log(fileData);
+        return res.sendFile(path.join(fileData.url));
+      }
+
+      connection.query(query, id, async(err, results) => {
         if (err) {
           console.error('Erro ao buscar o diploma:', err);
           res.status(500).send('Erro no servidor');
@@ -234,7 +261,12 @@ async function startApp() {
         }
 
         if (results.length > 0) {
+          const dbDegree = JSON.stringify(results[0])
+          await client.setEx(id, 3600, dbDegree);
+
           res.sendFile(path.join(results[0].url));
+          console.log(result[0].url);
+          
         } else {
           res.status(404).send('Diploma não encontrado');
         }

@@ -29,6 +29,25 @@ A API de criação de certificados recebe um corpo em formato JSON contendo os d
 }
 ```
 
+**Curl para testes com ###POST:**
+
+```
+  curl --location 'http://localhost:3000/degree/' \
+--header 'Content-Type: application/json' \
+--data '{
+   "student_name":"João Silva",
+   "nacionality":"Brasileiro",
+   "state":"São Paulo",
+   "birthday":"1990-05-20",
+   "document":"12345678901",
+   "conclusion_date":"2023-07-15",
+   "course":"Engenharia de Software",
+   "workload":"240 horas",
+   "name":"Maria Oliveira",
+   "job_position":"Coordenadora de Cursos"
+}'
+```
+
 ### 2. **GET** `/degree/{id}`
 
 Esse endpoint permite acessar e baixar o PDF do certificado usando o id do certificado gerado na etapa anterior.
@@ -37,3 +56,22 @@ Esse endpoint permite acessar e baixar o PDF do certificado usando o id do certi
 
 - **URL:** `http://localhost:3000/degree/{id}`
 - **Método:** `GET`
+
+**CURL para testes com ###GET:**
+
+```
+curl --location --request GET 'http://localhost:3000/degree/' \
+--header 'Content-Type: application/json' \
+--data '{
+   "student_name":"João Silva",
+   "nacionality":"Brasileiro",
+   "state":"São Paulo",
+   "birthday":"1990-05-20",
+   "document":"12345678901",
+   "conclusion_date":"2023-07-15",
+   "course":"Engenharia de Software",
+   "workload":"240 horas",
+   "name":"Maria Oliveira",
+   "job_position":"Coordenadora de Cursos"
+}'
+```

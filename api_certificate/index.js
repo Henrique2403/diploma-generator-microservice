@@ -249,8 +249,7 @@ async function startApp() {
 
       if (degree) {
         const fileData = JSON.parse(degree);
-        console.log(fileData);
-        return res.sendFile(path.join(fileData.url));
+        return res.sendFile(path.join(fileData));
       }
 
       connection.query(query, id, async(err, results) => {
@@ -261,11 +260,10 @@ async function startApp() {
         }
 
         if (results.length > 0) {
-          const dbDegree = JSON.stringify(results[0])
+          const dbDegree = JSON.stringify(results[0].url)
           await client.setEx(id, 3600, dbDegree);
 
           res.sendFile(path.join(results[0].url));
-          console.log(result[0].url);
           
         } else {
           res.status(404).send('Diploma não encontrado');

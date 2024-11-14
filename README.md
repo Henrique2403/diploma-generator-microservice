@@ -29,7 +29,7 @@ A API de criação de certificados recebe um corpo em formato JSON contendo os d
 }
 ```
 
-**Curl para testes com ###POST:**
+**Curl para testes com **POST**:**
 
 ```
   curl --location 'http://localhost:3000/degree/' \
@@ -57,7 +57,7 @@ Esse endpoint permite acessar e baixar o PDF do certificado usando o id do certi
 - **URL:** `http://localhost:3000/degree/{id}`
 - **Método:** `GET`
 
-**CURL para testes com ###GET:**
+**CURL para testes com **GET**:**
 
 ```
 curl --location --request GET 'http://localhost:3000/degree/' \
